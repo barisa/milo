@@ -20,6 +20,7 @@ import java.util.Random;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 import org.eclipse.milo.examples.server.methods.SqrtMethod;
 import org.eclipse.milo.examples.server.types.CustomDataType;
@@ -186,6 +187,28 @@ public class ExampleNamespace implements Namespace {
             addCustomDataTypeVariable(folderNode);
 
             addCustomObjectTypeAndInstance(folderNode);
+
+            //Example maxStringLength namespace
+            NodeId maxLengthNodeId = new NodeId(namespaceIndex, "MaxLength");
+            UaFolderNode maxLengthfolderNode = new UaFolderNode(
+                    server.getNodeMap(),
+                    maxLengthNodeId,
+                    new QualifiedName(namespaceIndex, "MaxLength"),
+                    LocalizedText.english("MaxLength")
+            );
+
+            server.getNodeMap().addNode(maxLengthfolderNode);
+            server.getUaNamespace().addReference(
+                    Identifiers.ObjectsFolder,
+                    Identifiers.Organizes,
+                    true,
+                    maxLengthNodeId.expanded(),
+                    NodeClass.Object
+            );
+
+            addMaxStringLengthExample(maxLengthfolderNode);
+
+
         } catch (UaException e) {
             logger.error("Error adding nodes: {}", e.getMessage(), e);
         }
@@ -847,6 +870,39 @@ public class ExampleNamespace implements Namespace {
                 return Optional.empty();
             }
         });
+    }
+
+
+
+    private void addMaxStringLengthExample(UaFolderNode rootNode) {
+        UaFolderNode scalarTypesFolder = new UaFolderNode(
+                server.getNodeMap(),
+                new NodeId(namespaceIndex, "MaxLength/MaxStringLengthNode"),
+                new QualifiedName(namespaceIndex, "MaxStringLengthNode"),
+                LocalizedText.english("MaxStringLengthNode")
+        );
+
+        final String maxStringNodeName = "MaxStringLengthNode";
+
+        server.getNodeMap().addNode(scalarTypesFolder);
+        rootNode.addOrganizes(scalarTypesFolder);
+
+        UaVariableNode node = new UaVariableNode.UaVariableNodeBuilder(server.getNodeMap())
+                .setNodeId(new NodeId(namespaceIndex, "MaxLength/" + maxStringNodeName ))
+                .setAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_WRITE)))
+                .setUserAccessLevel(ubyte(AccessLevel.getMask(AccessLevel.READ_WRITE)))
+                .setBrowseName(new QualifiedName(namespaceIndex, maxStringNodeName))
+                .setDisplayName(LocalizedText.english(maxStringNodeName))
+                .setDataType(Identifiers.String)
+                .setTypeDefinition(Identifiers.BaseDataVariableType)
+                .build();
+
+
+        final String maxString = Strings.repeat(".", 65535*4);
+        node.setValue(new DataValue(new Variant(maxString)));
+        node.setAttributeDelegate(new ValueLoggingDelegate());
+        server.getNodeMap().addNode(node);
+        scalarTypesFolder.addOrganizes(node);
     }
 
 }

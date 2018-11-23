@@ -30,6 +30,7 @@ import org.eclipse.milo.opcua.sdk.server.identity.X509IdentityValidator;
 import org.eclipse.milo.opcua.sdk.server.util.HostnameUtil;
 import org.eclipse.milo.opcua.stack.core.application.DefaultCertificateManager;
 import org.eclipse.milo.opcua.stack.core.application.DirectoryCertificateValidator;
+import org.eclipse.milo.opcua.stack.core.channel.ChannelConfig;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.DateTime;
 import org.eclipse.milo.opcua.stack.core.types.builtin.LocalizedText;
@@ -115,6 +116,21 @@ public class ExampleServer {
                     .orElseThrow(() -> new RuntimeException("certificate is missing the application URI")))
             .orElse("urn:eclipse:milo:examples:server:" + UUID.randomUUID());
 
+        int maxMessageSize = 10 * 1024 * 1024;
+        int maxChunkSize = 65535;
+        int maxChunkCount = (maxMessageSize / maxChunkSize) * 2;
+
+        int maxArrayLength = Integer.MAX_VALUE;
+        int maxStringLength = Integer.MAX_VALUE;
+
+        ChannelConfig channelConfig = new ChannelConfig(
+                maxChunkSize,
+                maxChunkCount,
+                maxMessageSize,
+                maxArrayLength,
+                maxStringLength
+        );
+
         OpcUaServerConfig serverConfig = OpcUaServerConfig.builder()
             .setApplicationUri(applicationUri)
             .setApplicationName(LocalizedText.english("Eclipse Milo OPC UA Example Server"))
@@ -146,6 +162,7 @@ public class ExampleServer {
                     USER_TOKEN_POLICY_ANONYMOUS,
                     USER_TOKEN_POLICY_USERNAME,
                     USER_TOKEN_POLICY_X509))
+            .setChannelConfig(channelConfig)
             .build();
 
         server = new OpcUaServer(serverConfig);

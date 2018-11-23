@@ -43,10 +43,11 @@ public class ReadExample implements ClientExample {
         client.connect().get();
 
         // synchronous read request via VariableNode
-        VariableNode node = client.getAddressSpace().createVariableNode(Identifiers.Server_ServerStatus_StartTime);
+        NodeId nodeId = new NodeId(2, "MaxLength/MaxStringLengthNode");
+        VariableNode node = client.getAddressSpace().createVariableNode(nodeId);
         DataValue value = node.readValue().get();
 
-        logger.info("StartTime={}", value.getValue().getValue());
+        logger.info("MaxStringLength={}", value.getValue().getValue());
 
         // asynchronous read request
         readServerStateAndTime(client).thenAccept(values -> {

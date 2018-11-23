@@ -26,6 +26,7 @@ import org.eclipse.milo.opcua.sdk.client.OpcUaClient;
 import org.eclipse.milo.opcua.sdk.client.api.config.OpcUaClientConfig;
 import org.eclipse.milo.opcua.stack.client.UaTcpStackClient;
 import org.eclipse.milo.opcua.stack.core.Stack;
+import org.eclipse.milo.opcua.stack.core.channel.ChannelConfig;
 import org.eclipse.milo.opcua.stack.core.security.SecurityPolicy;
 import org.eclipse.milo.opcua.stack.core.types.builtin.LocalizedText;
 import org.eclipse.milo.opcua.stack.core.types.structured.EndpointDescription;
@@ -100,6 +101,21 @@ public class ClientExampleRunner {
 
         logger.info("Using endpoint: {} [{}]", endpoint.getEndpointUrl(), securityPolicy);
 
+        int maxMessageSize = 10 * 1024 * 1024;
+        int maxChunkSize = 65535;
+        int maxChunkCount = (maxMessageSize / maxChunkSize) * 2;
+
+        int maxArrayLength = Integer.MAX_VALUE;
+        int maxStringLength = Integer.MAX_VALUE;
+
+        ChannelConfig channelConfig = new ChannelConfig(
+                maxChunkSize,
+                maxChunkCount,
+                maxMessageSize,
+                maxArrayLength,
+                maxStringLength
+        );
+
         OpcUaClientConfig config = OpcUaClientConfig.builder()
             .setApplicationName(LocalizedText.english("eclipse milo opc-ua client"))
             .setApplicationUri("urn:eclipse:milo:examples:client")
@@ -107,6 +123,7 @@ public class ClientExampleRunner {
             .setKeyPair(loader.getClientKeyPair())
             .setEndpoint(endpoint)
             .setIdentityProvider(clientExample.getIdentityProvider())
+            .setChannelConfig(channelConfig)
             .setRequestTimeout(uint(5000))
             .build();
 
